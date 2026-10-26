@@ -706,7 +706,7 @@ body {
   <div class="menu-btn" data-tab="cookie">Cookie Clicker</div>
   <div class="menu-btn" data-tab="ovo">OVO</div>
   <div class="menu-btn" data-tab="plumet">Plumet 2</div>
-  <div class="menu-btn" data-tab="retro">Retro Bowl</div>
+  <div class="menu-btn" data-tab="retro">Retro Bowl College</div>
 </div>
 
 <!-- CONTENT -->
@@ -1513,80 +1513,171 @@ if (gameObject) {
      HTML GAME UPLOADER
      ===================================================== */
 
-  htmlUpload.addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    if (!file) return;
+  /* =====================================================
+   HTML GAME UPLOADER + SAVED GAMES
+   ===================================================== */
 
-    const fileName = file.name.toLowerCase();
+const UPLOADED_GAMES_KEY = "classroomUploadedGamesV1";
 
-    if (!fileName.endsWith(".html") &&
-        !fileName.endsWith(".htm")) {
-      alert("Please select an HTML file.");
+// Save the uploaded games list to localStorage.
+function saveUploadedGames(games) {
+  try {
+    localStorage.setItem(
+      UPLOADED_GAMES_KEY,
+      JSON.stringify(games)
+    );
+    return true;
+  } catch (error) {
+    console.error("Could not save uploaded games:", error);
+    alert(
+      "Could not save this game. Browser storage may be full. " +
+      "Try uploading a smaller HTML file."
+    );
+    return false;
+  }
+}
+
+// Read the saved games from localStorage.
+function getSavedUploadedGames() {
+  try {
+    const saved = localStorage.getItem(UPLOADED_GAMES_KEY);
+    if (!saved) return [];
+
+    const games = JSON.parse(saved);
+
+    return Array.isArray(games)
+      ? games.filter(game =>
+          game &&
+          typeof game.id === "string" &&
+          typeof game.name === "string" &&
+          typeof game.html === "string"
+        )
+      : [];
+  } catch (error) {
+    console.error("Could not read saved games:", error);
+    return [];
+  }
+}
+
+// Create a game tab from saved or newly uploaded HTML.
+function createUploadedGame(game) {
+  // Avoid creating duplicate tabs.
+  if (document.getElementById("tab-" + game.id)) {
+    return;
+  }
+
+  const button = document.createElement("div");
+  button.className = "menu-btn";
+  button.dataset.tab = game.id;
+  button.textContent = "📄 " + game.name;
+
+  const gameView = document.createElement("div");
+  gameView.id = "tab-" + game.id;
+  gameView.className = "tab-view uploaded-game";
+  gameView.style.display = "none";
+  gameView.style.width = widthSlider.value + "%";
+
+  const iframe = document.createElement("iframe");
+  iframe.title = game.name;
+  iframe.style.width = "100%";
+  iframe.style.height = heightSlider.value + "px";
+  iframe.style.border = "none";
+  iframe.style.background = "#000";
+  iframe.style.borderRadius = "12px";
+
+  iframe.setAttribute(
+    "allow",
+    "fullscreen; autoplay; gamepad; pointer-lock"
+  );
+
+  iframe.allowFullscreen = true;
+
+  // Keep the HTML available even when the game is unloaded.
+  iframe.dataset.uploadedHtml = game.html;
+
+  gameView.appendChild(iframe);
+
+  sidebar.appendChild(button);
+  document.querySelector(".content").appendChild(gameView);
+}
+
+// Restore all previously uploaded games.
+function restoreUploadedGames() {
+  const savedGames = getSavedUploadedGames();
+
+  savedGames.forEach(game => {
+    createUploadedGame(game);
+  });
+
+  refreshGameToggleList();
+
+  console.log("Restored uploaded games:", savedGames.length);
+}
+
+// Handle a newly uploaded HTML file.
+htmlUpload.addEventListener("change", function (event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const fileName = file.name.toLowerCase();
+
+  if (
+    !fileName.endsWith(".html") &&
+    !fileName.endsWith(".htm")
+  ) {
+    alert("Please select an HTML file.");
+    htmlUpload.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function () {
+    const html = String(reader.result);
+
+    const game = {
+      id:
+        "uploaded-" +
+        Date.now() +
+        "-" +
+        Math.random().toString(36).slice(2, 8),
+      name: file.name,
+      html: html
+    };
+
+    // Save the game before adding its tab.
+    const savedGames = getSavedUploadedGames();
+    savedGames.push(game);
+
+    if (!saveUploadedGames(savedGames)) {
       htmlUpload.value = "";
       return;
     }
 
-    const reader = new FileReader();
+    createUploadedGame(game);
 
-    reader.onload = function () {
-      const html = String(reader.result);
+    refreshGameToggleList();
 
-      const gameId =
-        "uploaded-" + Date.now() + "-" +
-        Math.random().toString(36).slice(2, 8);
+    settingsPanel.classList.remove("open");
+    htmlUpload.value = "";
 
-      const button = document.createElement("div");
-      button.className = "menu-btn";
-      button.dataset.tab = gameId;
-      button.textContent = "📄 " + file.name;
+    console.log("Uploaded game saved:", file.name);
+  };
 
-      const gameView = document.createElement("div");
-      gameView.id = "tab-" + gameId;
-      gameView.className = "tab-view uploaded-game";
-      gameView.style.display = "none";
-      gameView.style.width = widthSlider.value + "%";
+  reader.onerror = function () {
+    alert("Could not read that HTML file.");
+    htmlUpload.value = "";
+  };
 
-      const iframe = document.createElement("iframe");
-      iframe.title = file.name;
-      iframe.style.width = "100%";
-      iframe.style.height = heightSlider.value + "px";
-      iframe.style.border = "none";
-      iframe.style.background = "#000";
-      iframe.style.borderRadius = "12px";
-      iframe.setAttribute(
-        "allow",
-        "fullscreen; autoplay; gamepad; pointer-lock"
-      );
-      iframe.allowFullscreen = true;
-      iframe.dataset.uploadedHtml = html;
-
-      gameView.appendChild(iframe);
-
-      sidebar.appendChild(button);
-      document.querySelector(".content").appendChild(gameView);
-
-      refreshGameToggleList();
-
-      settingsPanel.classList.remove("open");
-      htmlUpload.value = "";
-
-      console.log("User game loaded:", file.name);
-    };
-
-    reader.onerror = function () {
-      alert("Could not read that HTML file.");
-      htmlUpload.value = "";
-    };
-
-    reader.readAsText(file);
-  });
-
+  reader.readAsText(file);
+});
 
   /* =====================================================
-     DEFAULT TAB
-     ===================================================== */
+   RESTORE SAVED GAMES + DEFAULT TAB
+   ===================================================== */
 
-  showTab("home");
+restoreUploadedGames();
+showTab("home");
 
 })();
 </script>
