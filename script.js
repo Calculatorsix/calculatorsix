@@ -103,7 +103,7 @@ function openGamePage(popup) {
 <meta name="viewport"
       content="width=device-width, initial-scale=1">
 
-<title>Classroomx</title>
+<title>Classroom</title>
 
 <base href="https://calculatorsix.github.io/calculatorsix/">
 
