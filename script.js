@@ -105,7 +105,7 @@ function openGamePage(popup) {
 
 <title>Classroomx</title>
 
-<base href="https://calculatorsix.github.io/">
+<base href="https://calculatorsix.github.io/calculatorsix/">
 
 <link rel="stylesheet" href="style.css">
 
@@ -759,7 +759,7 @@ body {
 >
 
   <iframe
-    data-game-src="https://calculator.github.io/games/ovo/ovo.html"
+    data-game-src="https://calculatorsix.github.io/calculatorsix/games/ovo/ovo.html"
     width="90%"
     height="600"
     allowfullscreen>
@@ -774,7 +774,7 @@ body {
   style="display:none;"
 >
   <iframe
-    data-game-src="https://calculator.github.io/games/retro%20bowl/new.html"
+    data-game-src="https://calculatorsix.github.io/calculatorsix/games/retro%20bowl/new.html"
     title="Retro Bowl"
     width="90%"
     height="600"
