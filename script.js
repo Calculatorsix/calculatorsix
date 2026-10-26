@@ -714,7 +714,7 @@ body {
 
   <div id="tab-home" class="tab-view">
     <h1>Home</h1>
-    <p>Manage which games are running to increase performance.</p>
+    <p>Manage which games you want to see.</p>
     <div id="game-toggle-list"></div>
   </div>
 
@@ -723,14 +723,6 @@ body {
 <div id="tab-plumet" class="tab-view" style="display: none;">
   <div id="plumet-player"></div>
 </div>
-
-<object
-  id="game-object"
-  data-game-src="Plumet2.swf"
-  type="application/x-shockwave-flash"
-></object>
-  </div>
-
 
   <!-- COOKIE CLICKER -->
 
