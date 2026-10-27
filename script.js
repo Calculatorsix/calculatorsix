@@ -971,9 +971,9 @@ body {
     autoplay: "on",
     backgroundColor: "#FFFFFF"
   };
-</script>
+<\/script>
 
-<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+<script src="https://unpkg.com/@ruffle-rs/ruffle"><\/script>
 
 <!-- CLASSROOM JAVASCRIPT -->
   
@@ -1241,26 +1241,19 @@ if (activeView) {
      SAFETY CHECK
      ===================================================== */
 
-  if (
-    !settingsButton ||
-    !settingsPanel ||
-    !closeSettings ||
-    !widthSlider ||
-    !heightSlider ||
-    !widthValue ||
-    !heightValue ||
-    !resetButton ||
-    !htmlUpload
-  ) {
-
-    console.error(
-      "Classroom Settings: required elements are missing."
-    );
-
-    return;
-
-  }
-
+if (
+  !settingsButton ||
+  !settingsPanel ||
+  !closeSettings ||
+  !widthSlider ||
+  !heightSlider ||
+  !widthValue ||
+  !heightValue ||
+  !resetButton ||
+  !htmlUpload
+) {
+  console.error("Classroom Settings: required elements are missing.");
+}
 
   /* =====================================================
      OPEN SETTINGS
@@ -1761,7 +1754,7 @@ restoreUploadedGames();
 showTab("home");
 
 })();
-</script>
+<\/script>
 
 
 </body>
