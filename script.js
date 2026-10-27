@@ -1754,7 +1754,7 @@ restoreUploadedGames();
 showTab("home");
 
 })();
-<\/script>
+</script>
 
 
 </body>
