@@ -630,22 +630,6 @@ body {
 
 }
 
-#reset-imported-games {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background: #492020;
-  color: white;
-  border: 1px solid #884444;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  box-sizing: border-box;
-}
-
-#reset-imported-games:hover {
-  background: #702828;
-}
 
 /* =====================================================
    USER GAME LABEL
@@ -950,10 +934,6 @@ body {
       >
         Reset Game Size
       </button>
-      
-      <button id="reset-imported-games">
-  🗑️ Reset Imported Games
-</button>
 </div>
 
 
@@ -971,9 +951,9 @@ body {
     autoplay: "on",
     backgroundColor: "#FFFFFF"
   };
-<\/script>
+</script>
 
-<script src="https://unpkg.com/@ruffle-rs/ruffle"><\/script>
+<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
 
 <!-- CLASSROOM JAVASCRIPT -->
   
@@ -1241,19 +1221,26 @@ if (activeView) {
      SAFETY CHECK
      ===================================================== */
 
-if (
-  !settingsButton ||
-  !settingsPanel ||
-  !closeSettings ||
-  !widthSlider ||
-  !heightSlider ||
-  !widthValue ||
-  !heightValue ||
-  !resetButton ||
-  !htmlUpload
-) {
-  console.error("Classroom Settings: required elements are missing.");
-}
+  if (
+    !settingsButton ||
+    !settingsPanel ||
+    !closeSettings ||
+    !widthSlider ||
+    !heightSlider ||
+    !widthValue ||
+    !heightValue ||
+    !resetButton ||
+    !htmlUpload
+  ) {
+
+    console.error(
+      "Classroom Settings: required elements are missing."
+    );
+
+    return;
+
+  }
+
 
   /* =====================================================
      OPEN SETTINGS
@@ -1625,67 +1612,6 @@ function restoreUploadedGames() {
   refreshGameToggleList();
 
   console.log("Restored uploaded games:", savedGames.length);
-}
-
-/* =====================================================
-   RESET IMPORTED GAMES
-   ===================================================== */
-
-const resetImportedGamesButton =
-  document.getElementById("reset-imported-games");
-
-if (resetImportedGamesButton) {
-  resetImportedGamesButton.addEventListener("click", function () {
-
-    const savedGames = getSavedUploadedGames();
-
-    if (savedGames.length === 0) {
-      alert("There are no saved imported games to remove.");
-      return;
-    }
-
-    const confirmed = confirm(
-      "Are you sure you want to delete all " +
-      savedGames.length +
-      " imported game(s)?\n\n" +
-      "This cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    // Return to Home before removing an imported game tab.
-    showTab("home");
-
-    // Delete saved HTML games from localStorage.
-    try {
-      localStorage.removeItem(UPLOADED_GAMES_KEY);
-    } catch (error) {
-      console.error("Could not reset imported games:", error);
-      alert("Could not delete the saved games.");
-      return;
-    }
-
-    // Remove imported game buttons and their corresponding views.
-    document.querySelectorAll(".menu-btn").forEach(button => {
-      const gameId = button.dataset.tab;
-
-      if (gameId && gameId.startsWith("uploaded-")) {
-        button.remove();
-      }
-    });
-
-    document.querySelectorAll(".tab-view.uploaded-game").forEach(view => {
-      view.remove();
-    });
-
-    // Update the Home game manager.
-    refreshGameToggleList();
-
-    // Close Settings.
-    settingsPanel.classList.remove("open");
-
-    alert("All imported games have been removed.");
-  });
 }
 
 // Handle a newly uploaded HTML file.
