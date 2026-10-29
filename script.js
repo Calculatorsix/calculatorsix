@@ -1517,46 +1517,102 @@ if (gameObject) {
    HTML GAME UPLOADER + SAVED GAMES
    ===================================================== */
 
-const UPLOADED_GAMES_KEY = "classroomUploadedGamesV1";
+// Store uploaded games in IndexedDB instead of localStorage.
+const UPLOADED_GAMES_DB = "classroomUploadedGamesDB";
+const UPLOADED_GAMES_STORE = "games";
 
-// Save the uploaded games list to localStorage.
-function saveUploadedGames(games) {
-  try {
-    localStorage.setItem(
-      UPLOADED_GAMES_KEY,
-      JSON.stringify(games)
-    );
-    return true;
-  } catch (error) {
-    console.error("Could not save uploaded games:", error);
-    alert(
-      "Could not save this game. Browser storage may be full. " +
-      "Try uploading a smaller HTML file."
-    );
-    return false;
-  }
+function openUploadedGamesDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(UPLOADED_GAMES_DB, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+
+      if (!db.objectStoreNames.contains(UPLOADED_GAMES_STORE)) {
+        db.createObjectStore(UPLOADED_GAMES_STORE, {
+          keyPath: "id"
+        });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 }
 
-// Read the saved games from localStorage.
-function getSavedUploadedGames() {
-  try {
-    const saved = localStorage.getItem(UPLOADED_GAMES_KEY);
-    if (!saved) return [];
+// Save one uploaded game.
+async function saveUploadedGame(game) {
+  const db = await openUploadedGamesDB();
 
-    const games = JSON.parse(saved);
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(
+      UPLOADED_GAMES_STORE,
+      "readwrite"
+    );
 
-    return Array.isArray(games)
-      ? games.filter(game =>
-          game &&
-          typeof game.id === "string" &&
-          typeof game.name === "string" &&
-          typeof game.html === "string"
-        )
-      : [];
-  } catch (error) {
-    console.error("Could not read saved games:", error);
-    return [];
-  }
+    transaction.objectStore(UPLOADED_GAMES_STORE).put(game);
+
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(true);
+    };
+
+    transaction.onerror = () => {
+      const error = transaction.error;
+      db.close();
+      reject(error);
+    };
+
+    transaction.onabort = () => {
+      const error = transaction.error;
+      db.close();
+      reject(error || new Error("Storage transaction aborted."));
+    };
+  });
+}
+
+// Retrieve previously uploaded games.
+async function getSavedUploadedGames() {
+  const db = await openUploadedGamesDB();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(
+      UPLOADED_GAMES_STORE,
+      "readonly"
+    );
+
+    const request = transaction
+      .objectStore(UPLOADED_GAMES_STORE)
+      .getAll();
+
+    let games = [];
+
+    request.onsuccess = () => {
+      games = request.result.filter(game =>
+        game &&
+        typeof game.id === "string" &&
+        typeof game.name === "string" &&
+        typeof game.html === "string"
+      );
+    };
+
+    transaction.oncomplete = () => {
+      db.close();
+      resolve(games);
+    };
+
+    transaction.onerror = () => {
+      const error = transaction.error;
+      db.close();
+      reject(error);
+    };
+
+    transaction.onabort = () => {
+      const error = transaction.error;
+      db.close();
+      reject(error || new Error("Could not read saved games."));
+    };
+  });
 }
 
 // Create a game tab from saved or newly uploaded HTML.
@@ -1616,61 +1672,22 @@ function restoreUploadedGames() {
 
 // Handle a newly uploaded HTML file.
 htmlUpload.addEventListener("change", function (event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  const file = event.tarasync function restoreUploadedGames() {
+  try {
+    const savedGames = await getSavedUploadedGames();
 
-  const fileName = file.name.toLowerCase();
-
-  if (
-    !fileName.endsWith(".html") &&
-    !fileName.endsWith(".htm")
-  ) {
-    alert("Please select an HTML file.");
-    htmlUpload.value = "";
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = function () {
-    const html = String(reader.result);
-
-    const game = {
-      id:
-        "uploaded-" +
-        Date.now() +
-        "-" +
-        Math.random().toString(36).slice(2, 8),
-      name: file.name,
-      html: html
-    };
-
-    // Save the game before adding its tab.
-    const savedGames = getSavedUploadedGames();
-    savedGames.push(game);
-
-    if (!saveUploadedGames(savedGames)) {
-      htmlUpload.value = "";
-      return;
-    }
-
-    createUploadedGame(game);
+    savedGames.forEach(game => {
+      createUploadedGame(game);
+    });
 
     refreshGameToggleList();
 
-    settingsPanel.classList.remove("open");
-    htmlUpload.value = "";
-
-    console.log("Uploaded game saved:", file.name);
-  };
-
-  reader.onerror = function () {
-    alert("Could not read that HTML file.");
-    htmlUpload.value = "";
-  };
-
-  reader.readAsText(file);
-});
+    console.log("Restored uploaded games:", savedGames.length);
+  } catch (error) {
+    console.error("Could not restore uploaded games:", error);
+    alert("Could not load your saved games.");
+  }
+}
 
   /* =====================================================
    RESTORE SAVED GAMES + DEFAULT TAB
